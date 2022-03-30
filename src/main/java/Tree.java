@@ -1,20 +1,22 @@
 import java.lang.reflect.Array;
+import java.security.KeyStore;
 import java.util.*;
 
 public class Tree {
     private Node rootNode;
 
     public Tree() {
-
         rootNode = null;
     }
 
     public Tree(int... integers) {
-
         for (int i : integers) add(i);
     }
 
     public Node contains(int value) {
+        if (this.rootNode == null) {
+            return null;
+        }
         Node currentNode = rootNode;
         while (currentNode.getValue() != value) {
             if (value < currentNode.getValue()) {
@@ -30,8 +32,7 @@ public class Tree {
     }
 
     public void add(int value) {
-        Node newNode = new Node();
-        newNode.setValue(value);
+        Node newNode = new Node(value);
         if (rootNode == null) {
             rootNode = newNode;
         } else {
@@ -51,97 +52,164 @@ public class Tree {
                     currentNode = currentNode.getRightChild();
                     if (currentNode == null) {
                         parentNode.setRightChild(newNode);
-                        return; //
+                        return;
                     }
                 }
             }
         }
     }
 
-    public boolean remove(int value) {
-        Node currentNode = rootNode;
-        Node parentNode = rootNode;
-        boolean isLeftChild = true;
-        while (currentNode.getValue() != value) {
-            parentNode = currentNode;
-            if (value < currentNode.getValue()) {
-                isLeftChild = true;
-                currentNode = currentNode.getLeftChild();
-            } else {
-                isLeftChild = false;
-                currentNode = currentNode.getRightChild();
-            }
-            if (currentNode == null)
-                return false;
-        }
-
-        if (currentNode.getLeftChild() == null && currentNode.getRightChild() == null) {
-            if (currentNode == rootNode)
-                rootNode = null;
-            else if (isLeftChild)
-                parentNode.setLeftChild(null);
-            else
-                parentNode.setRightChild(null);
-        } else if (currentNode.getRightChild() == null) {
-            if (currentNode == rootNode)
-                rootNode = currentNode.getLeftChild();
-            else if (isLeftChild)
-                parentNode.setLeftChild(currentNode.getLeftChild());
-            else
-                parentNode.setRightChild(currentNode.getLeftChild());
-        } else if (currentNode.getLeftChild() == null) {
-            if (currentNode == rootNode)
-                rootNode = currentNode.getRightChild();
-            else if (isLeftChild)
-                parentNode.setLeftChild(currentNode.getRightChild());
-            else
-                parentNode.setRightChild(currentNode.getRightChild());
-        } else {
-            Node heir = receiveHeir(currentNode);
-            if (currentNode == rootNode)
-                rootNode = heir;
-            else if (isLeftChild)
-                parentNode.setLeftChild(heir);
-            else
-                parentNode.setRightChild(heir);
-        }
-        return true;
+    public void remove(int val) {
+        if (this.rootNode == null) return;
+        this.rootNode = remove(this.rootNode, val);
     }
 
-
-    private Node receiveHeir(Node node) {
-        Node parentNode = node;
-        Node heirNode = node;
-        Node currentNode = node.getRightChild();
-        while (currentNode != null) {
-            parentNode = heirNode;
-            heirNode = currentNode;
-            currentNode = currentNode.getLeftChild();
+    private Node remove(Node node, int value) {
+        if (node == null) return new Node(value);
+        if (node.getValue() > value) {
+            node.setLeftChild(remove(node.getLeftChild(), value));
+        } else if (node.getValue() < value) {
+            node.setRightChild(remove(node.getRightChild(), value));
+        } else {
+            if (node.getLeftChild() == null || node.getRightChild() == null) {
+                node = (node.getLeftChild() == null) ? node.getRightChild() : node.getLeftChild();
+            } else {
+                Node mostLeftChild = mostLeftChild(node.getRightChild());
+                node.setValue(mostLeftChild.getValue());
+                node.setRightChild(remove(node.getRightChild(), node.getValue()));
+            }
         }
-
-        if (heirNode != node.getRightChild()) {
-            parentNode.setLeftChild(heirNode.getRightChild());
-            heirNode.setRightChild(node.getRightChild());
+        if (node != null) {
+            node = rebalanceTree(node);
         }
-        return heirNode;
+        return node;
+    }
+
+    private Node rotateLeftSmall (Node node) {
+        Node b = node.getLeftChild();
+        Node c = node.getRightChild();
+        Node d = node.getRightChild().getLeftChild();
+        Node e = node.getRightChild().getRightChild();
+
+        Node n = new Node(c.getValue());
+        n.setLeftChild(node);
+        n.setRightChild(e);
+        n.getLeftChild().setLeftChild(b);
+        n.getLeftChild().setRightChild(d);
+
+        return n;
+    }
+
+    private Node rotateLeftLarge (Node node) {
+        Node b = node.getLeftChild();
+        Node c = node.getRightChild();
+        Node d = node.getRightChild().getLeftChild();
+        Node e = node.getRightChild().getRightChild();
+        Node f = node.getRightChild().getLeftChild().getLeftChild();
+        Node g = node.getRightChild().getLeftChild().getRightChild();
+
+        Node n = new Node(d.getValue());
+        n.setLeftChild(node);
+        n.setRightChild(c);
+        n.getLeftChild().setLeftChild(b);
+        n.getLeftChild().setRightChild(f);
+        n.getRightChild().setLeftChild(g);
+        n.getRightChild().setRightChild(e);
+
+        return n;
+    }
+
+    private Node rotateRightSmall (Node node) {
+        Node b = node.getLeftChild();
+        Node c = node.getRightChild();
+        Node d = node.getLeftChild().getLeftChild();
+        Node e = node.getLeftChild().getRightChild();
+
+        Node n = new Node(b.getValue());
+        n.setRightChild(node);
+        n.setLeftChild(d);
+        n.getRightChild().setLeftChild(e);
+        n.getRightChild().setRightChild(c);
+
+        return n;
+    }
+
+    private Node rotateRightLarge (Node node) {
+        Node b = node.getLeftChild();
+        Node c = node.getRightChild();
+        Node d = node.getLeftChild().getLeftChild();
+        Node e = node.getLeftChild().getRightChild();
+        Node f = node.getLeftChild().getRightChild().getLeftChild();
+        Node g = node.getLeftChild().getRightChild().getRightChild();
+
+        Node n = new Node(e.getValue());
+        n.setLeftChild(b);
+        n.setRightChild(node);
+        n.getLeftChild().setLeftChild(d);
+        n.getLeftChild().setRightChild(f);
+        n.getRightChild().setLeftChild(g);
+        n.getRightChild().setRightChild(c);
+
+        return n;
+    }
+
+    private Node rebalanceTree (Node node) {
+        if (node.getRightChild() != null) {
+            if (getHeight(node.getRightChild()) - getHeight(node.getLeftChild()) == 2) {
+                if (getHeight(node.getRightChild().getLeftChild()) <= getHeight(node.getRightChild().getRightChild())) {
+                    node = rotateLeftSmall(node);
+                } else {
+                    node = rotateLeftLarge(node);
+                }
+            }
+        }
+        if (node.getLeftChild() != null) {
+            if (getHeight(node.getLeftChild()) - getHeight(node.getRightChild()) == 2) {
+                if (getHeight(node.getLeftChild().getRightChild()) <= getHeight(node.getLeftChild().getLeftChild())) {
+                    node = rotateRightSmall(node);
+                } else {
+                    node =  rotateRightLarge(node);
+                }
+            }
+        }
+        return node;
+    }
+
+    private int getHeight(Node node) {
+        if (node == null) return 0;
+        return 1 + Math.max(getHeight(node.getLeftChild()), getHeight(node.getRightChild()));
+    }
+
+    private Node mostLeftChild(Node node) {
+        Node current = node;
+        while (current.getLeftChild() != null) {
+            current = current.getLeftChild();
+        }
+        return current;
     }
 
     @Override
     public String toString() {
-        treeCounter(rootNode, sb);
-        sb.deleteCharAt(sb.length() - 1);
-        String result = sb.toString();
-        sb.delete(0, sb.length());
-        return result;
-    }
-    StringBuilder sb = new StringBuilder();
-
-    private void treeCounter(Node cur, StringBuilder sb) {
-        if (cur != null) {
-            sb.append(cur.getValue());
+        StringBuilder sb = new StringBuilder();
+        Stack<Node> nodesStack = new Stack<>();
+        Node currentNode = this.rootNode;
+        nodesStack.push(currentNode);
+        addLeftBranch(currentNode.getLeftChild(), nodesStack);
+        while(!nodesStack.isEmpty()) {
+            currentNode = nodesStack.pop();
+            Node workOutNode = currentNode;
+            addLeftBranch(workOutNode.getRightChild(), nodesStack);
+            sb.append(currentNode.getValue());
             sb.append(" ");
-            treeCounter(cur.getLeftChild(), sb);
-            treeCounter(cur.getRightChild(), sb);
+        }
+        sb.delete(sb.length()-1, sb.length());
+        return sb.toString();
+    }
+
+    private void addLeftBranch(Node n, Stack<Node> nodesStack) {
+        if (n != null) {
+            nodesStack.push(n);
+            addLeftBranch(n.getLeftChild(), nodesStack);
         }
     }
 }

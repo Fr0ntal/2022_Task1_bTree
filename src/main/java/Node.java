@@ -3,27 +3,32 @@ public class Node {
     private Node leftChild;
     private Node rightChild;
 
+    public Node(int value) {
+        this.value = value;
+        this.leftChild = this.rightChild = null;
+    }
+
     public int getValue() {
         return this.value;
     }
-    public void setValue(final int value) {
 
+    public void setValue(final int value) {
         this.value = value;
     }
-    public Node getLeftChild() {
 
+    public Node getLeftChild() {
         return this.leftChild;
     }
-    public void setLeftChild(final Node leftChild) {
 
+    public void setLeftChild(final Node leftChild) {
         this.leftChild = leftChild;
     }
-    public Node getRightChild() {
 
+    public Node getRightChild() {
         return this.rightChild;
     }
-    public void setRightChild(final Node rightChild) {
 
+    public void setRightChild(final Node rightChild) {
         this.rightChild = rightChild;
     }
 

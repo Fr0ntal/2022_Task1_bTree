@@ -96,27 +96,13 @@ public class Tree {
         n.setRightChild(e);
         n.getLeftChild().setLeftChild(b);
         n.getLeftChild().setRightChild(d);
-
         return n;
     }
 
     private Node rotateLeftLarge (Node node) {
-        Node b = node.getLeftChild();
-        Node c = node.getRightChild();
-        Node d = node.getRightChild().getLeftChild();
-        Node e = node.getRightChild().getRightChild();
-        Node f = node.getRightChild().getLeftChild().getLeftChild();
-        Node g = node.getRightChild().getLeftChild().getRightChild();
-
-        Node n = new Node(d.getValue());
-        n.setLeftChild(node);
-        n.setRightChild(c);
-        n.getLeftChild().setLeftChild(b);
-        n.getLeftChild().setRightChild(f);
-        n.getRightChild().setLeftChild(g);
-        n.getRightChild().setRightChild(e);
-
-        return n;
+        node.setRightChild(rotateRightSmall(node.getRightChild()));
+        node = rotateLeftSmall(node);
+        return node;
     }
 
     private Node rotateRightSmall (Node node) {
@@ -135,22 +121,9 @@ public class Tree {
     }
 
     private Node rotateRightLarge (Node node) {
-        Node b = node.getLeftChild();
-        Node c = node.getRightChild();
-        Node d = node.getLeftChild().getLeftChild();
-        Node e = node.getLeftChild().getRightChild();
-        Node f = node.getLeftChild().getRightChild().getLeftChild();
-        Node g = node.getLeftChild().getRightChild().getRightChild();
-
-        Node n = new Node(e.getValue());
-        n.setLeftChild(b);
-        n.setRightChild(node);
-        n.getLeftChild().setLeftChild(d);
-        n.getLeftChild().setRightChild(f);
-        n.getRightChild().setLeftChild(g);
-        n.getRightChild().setRightChild(c);
-
-        return n;
+        node.setLeftChild(rotateLeftSmall(node.getLeftChild()));
+        node = rotateRightSmall(node);
+        return node;
     }
 
     private Node rebalanceTree (Node node) {
